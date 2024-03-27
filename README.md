@@ -65,7 +65,7 @@ output = formatter.format(object)
 
 ## Example output
 
-Llama converts 
+Nodegoat API data
 
 ```json
 {
@@ -129,7 +129,7 @@ Llama converts
             ...
 ```
 
-info
+Llama json conversion
 
 ```json
 {
