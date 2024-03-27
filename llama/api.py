@@ -135,12 +135,13 @@ class NodegoatAPI():
             object_id = object_id if isinstance(object_id, list) else [ object_id ]
             for id in object_id:
                 if id in self._object_cache[type_id]:
-                    print("cache hit", id)
+                    self._log(f"cache hit for object id {id}")
                     result.append(self._object_cache[type_id][id])
                 else:
                     request_ids.append(id)
         # fetch remaining objects
         if len(request_ids):
+            self._log(f"cache miss for object id(s) {request_ids}")
             objects = list(self.object_request(type_id=type_id, object_id=object_id).data.objects.values())
             for object in objects:
                 self._object_cache[type_id][object.metadata.id] = object        
