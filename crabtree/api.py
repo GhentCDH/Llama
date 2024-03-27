@@ -15,15 +15,18 @@ class TokenAuth(AuthBase):
 
 class NodegoatAPI():
     
-    def __init__(self, api_endpoint: str, token: str, project_id: int = None) -> None:
-        self._api = api_endpoint
+    def __init__(self, api_endpoint: str, token: str, project_id: int = None, debug: bool = False) -> None:
+        self._api = api_endpoint.strip('/')
         self._token = token
         self._project_id = project_id
-        self._object_cache = {}
-        self._model_cache = {}
+        self._debug = debug
+        
+        self._type_cache = {}
+        self._object_cache = {}        
     
     def _request(self, url: str) -> dict|None:
-        request_url = self._api + '/' + url
+        request_url = "/".join([self._api, url.strip('/')])
+        self._log(f"Requesting {request_url}")
         response = requests.get(
             url=request_url,
             headers={
@@ -99,4 +102,63 @@ class NodegoatAPI():
         response = self._request(url)
         # print(json.dumps(response.content, indent=4))
         
-        return msgspec.json.decode(response.content, type=ObjectResponse)  
+        return msgspec.json.decode(response.content, type=ObjectResponse)
+    
+    
+    def get_object_type(self, type_id: int) -> ObjectType:
+        # preload model
+        if not self._type_cache:
+            self._log("Loading project model")
+            self._load_project_model()
+            self._log("Done loading")
+        # type should be in cache
+        if not type_id in self._type_cache:
+            raise Exception(f"Type with id {type_id} not found in project model.")
+        # return type
+        return self._type_cache[type_id]
+    
+    def get_object(self, type_id: int, object_id: int|list[int]):        
+        # preload classification?
+        if self.get_object_type(type_id).metadata.is_classification:
+            if not type_id in self._object_cache:
+                self._log(f"Preloading classification {type_id}")
+                objects = list(self.object_request(type_id=type_id, object_id=object_id).data.objects.values())
+                self._object_cache[type_id] = {int(object.metadata.id): object for object in objects}
+
+        # init cache
+        self._object_cache.setdefault(type_id, {})
+        
+        result = []
+        request_ids = []
+        # get from cache
+        if object_id:
+            object_id = object_id if isinstance(object_id, list) else [ object_id ]
+            for id in object_id:
+                if id in self._object_cache[type_id]:
+                    print("cache hit", id)
+                    result.append(self._object_cache[type_id][id])
+                else:
+                    request_ids.append(id)
+        # fetch remaining objects
+        if len(request_ids):
+            objects = list(self.object_request(type_id=type_id, object_id=object_id).data.objects.values())
+            for object in objects:
+                self._object_cache[type_id][object.metadata.id] = object        
+            result.extend(objects)            
+
+        return result
+
+    def get_media(self, media_id):
+        response = self._request('/'.join(['upload', 'media', media_id]))
+        if response.headers.get('Content-Type') not in {'application/json', 'text/csv', 'text/txt', 'application/xml', 'text/xml'}:
+            raise Exception(f"Unsupported content type: {response.headers.get('Content-Type')}")
+        return response.text
+    
+    def _load_project_model(self):
+        response = self.model_request()
+        for type_id, model in response.data.models.items():
+            self._type_cache[int(type_id)] = model
+            
+    def _log(self, message: str):
+        if self._debug:
+            print(message)
