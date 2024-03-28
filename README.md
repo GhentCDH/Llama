@@ -1,20 +1,20 @@
 # Llama
 
-A python library for Nodegoat. This library allows you to requests model and object data using the Nodegoat API.
+A python library for [Nodegoat](https://nodegoat.net). This library allows you to requests model and object data using the Nodegoat API.
 
 ## Features
 
-- raw model and object requests
-- cached model, object and media requests
-- format unreadable Nodegoat objects as readable json objects
-    - convert field description_ids to system names
-    - cast values to correct types
+- model and object API requests
+- cached classification requests
+- json formatter for Nodegoat object responses
+    - convert field description ids to names
+    - cast field values to associated field type
     - traverse references to classifications, objects and media
 
-## API usage
+## API
 
 ```python
-from llama import NodegoatAPI, ObjectFormatter, MapperDefaults, ObjectMapper, FieldMapper, TypeMapper
+from llama import NodegoatAPI
 
 nodegoat = NodegoatAPI('https://api.nodegoat.net', 
                   'my_very_secret_api_token',
@@ -30,19 +30,26 @@ data_response = nodegoat_api.object_request(type_id=1234)
 # get specific object(s)
 data_response = nodegoat_api.object_request(object_id=456789)
 
-## cached api requests
+## cached data/type requests
 object_description = nodegoat_api.get_object_type(type_id=1234)
 
-object_data = nodegoat_api.get_object(object_id=456789)
-objects = nodegoat_api.get_object(type_id=1234)
-
+objects = nodegoat_api.get_object(object_id=56789) # single object
+objects = nodegoat_api.get_object(type_id=1234) # all results for type 1234
 ```
 
-## Formatter usage
+## Formatter
 
+The Nodegoat API returns raw data in a format that reflects the internal database structure, making the data hard to read and process. Furthermore, Nodegoat outputs all primitive type values (int, float, bool) as strings, requiring extra processing to cast the values to their associated type.
 
+Example: the string value "1" can be a boolean True, the integer 1 or the float point $`10^{-10}`$.
+
+The formatter tries fix all that and convert the output to a more readable json object. Some options can be configured by adding an optional Mapper object.
+
+### Usage
 
 ```python
+from llama import NodegoatAPI, ObjectFormatter, MapperDefaults, ObjectMapper, FieldMapper, TypeMapper
+
 mapper = ObjectMapper(
     defaults=MapperDefaults(traverse_classification=True, traverse_type=False),
     types={
@@ -63,9 +70,9 @@ object = nodegoat_api.get_object(object_id=456789)
 output = formatter.format(object)
 ```
 
-## Example output
+### Example
 
-Nodegoat API data
+**Nodegoat output**
 
 ```json
 {
@@ -129,7 +136,7 @@ Nodegoat API data
             ...
 ```
 
-Llama json conversion
+**Llama output**
 
 ```json
 {
@@ -167,4 +174,5 @@ Llama json conversion
     "written_in": "MRD Tall \u1e62ad\u016bm",
     "museum_number": "O.223",
     "accession_number": "NA",
+    ...
 ```
