@@ -1,6 +1,9 @@
 import requests
+import msgspec
+import json
 from requests.auth import AuthBase
-from .type import *
+from .types.response import ModelResponse, ObjectResponse
+from .types.model import ObjectType
 
 class TokenAuth(AuthBase):
     """Implements a token authentication scheme."""
@@ -100,7 +103,7 @@ class NodegoatAPI():
 
         # request
         response = self._request(url)
-        # print(json.dumps(response.content, indent=4))
+        # print(json.dumps(str(response.content), indent=4))
         
         return msgspec.json.decode(response.content, type=ObjectResponse)
     
@@ -108,9 +111,9 @@ class NodegoatAPI():
     def get_object_type(self, type_id: int) -> ObjectType:
         # preload model
         if not self._type_cache:
-            self._log("Loading project model")
+            self._log("Loading project model ...")
             self._load_project_model()
-            self._log("Done loading")
+            self._log("Done loading.")
         # type should be in cache
         if not type_id in self._type_cache:
             raise Exception(f"Type with id {type_id} not found in project model.")
@@ -119,12 +122,12 @@ class NodegoatAPI():
     
     def get_object(self, type_id: int, object_id: int|list[int]):        
         # preload classification?
-        if self.get_object_type(type_id).metadata.is_classification:
+        if self.get_object_type(type_id).type.is_classification:
             if not type_id in self._object_cache:
-                self._log(f"Preloading classification {type_id}")
-                objects = list(self.object_request(type_id=type_id, object_id=object_id).data.objects.values())
+                self._log(f"Preloading classification {type_id} ...")
+                objects = list(self.object_request(type_id=type_id).data.objects.values())
+                self._log("Done loading.")
                 self._object_cache[type_id] = {int(object.metadata.id): object for object in objects}
-
         # init cache
         self._object_cache.setdefault(type_id, {})
         
@@ -135,13 +138,13 @@ class NodegoatAPI():
             object_id = object_id if isinstance(object_id, list) else [ object_id ]
             for id in object_id:
                 if id in self._object_cache[type_id]:
-                    self._log(f"cache hit for object id {id}")
+                    self._log(f"Cache hit for object id {id}")
                     result.append(self._object_cache[type_id][id])
                 else:
                     request_ids.append(id)
         # fetch remaining objects
         if len(request_ids):
-            self._log(f"cache miss for object id(s) {request_ids}")
+            self._log(f"Cache miss for object id(s) {request_ids}")
             objects = list(self.object_request(type_id=type_id, object_id=object_id).data.objects.values())
             for object in objects:
                 self._object_cache[type_id][object.metadata.id] = object        
