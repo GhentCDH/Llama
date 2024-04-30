@@ -1,6 +1,6 @@
 # Llama
 
-A python library for [Nodegoat](https://nodegoat.net). This library allows you to requests model and object data using the Nodegoat API.
+A python library for [Nodegoat](https://nodegoat.net). This library allows you to requests model and object data using the Nodegoat API. 
 
 ## Features
 
@@ -43,23 +43,23 @@ The Nodegoat API returns raw data in a format that reflects the internal databas
 
 Example: the string value "1" can be the string value "1", a boolean True, the integer number 1 or the floating point number $`10^{-10}`$.
 
-The formatter tries to fix these problemes and convert the output to a more readable json object. The formatter can alse traverse references to other data (objects, classifications or media). Some options can be configured using an optional Mapper object.
+The formatter tries to fix these problemes and convert the output to a more readable json object. The formatter can also traverse references to other data (objects, classifications or media). Some options can be configured using an optional Mapper object.
 
 ### Usage
 
 ```python
 from llama import NodegoatAPI, ObjectFormatter, MapperDefaults, ObjectMapper, FieldMapper, TypeMapper
 
-mapper = ObjectMapper(
+mapper = ModelMapper(
     defaults=MapperDefaults(traverse_classification=True, traverse_type=False),
     types={
-        1286: TypeMapper(
+        1286: ObjectMapper(
             fields={
                 4732: FieldMapper(traverse=True),
                 5040: FieldMapper(traverse=True),
             },
         ),
-        1292: TypeMapper(
+        1292: ObjectMapper(
             exclude_fields={'sequence'},
         ),
     }
