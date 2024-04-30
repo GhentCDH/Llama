@@ -1,0 +1,4 @@
+[project]
+name = "Llama"
+description = "A python library for Nodegoat (https://nodegoat.net)"
+version = "1.0.1"

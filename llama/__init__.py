@@ -1,3 +1,4 @@
 from .api import NodegoatAPI
-from .format import ObjectFormatter
-from .type import ObjectResponse, ModelResponse, ObjectMapper, FieldMapper, TypeMapper, MapperDefaults
+from .formatter import ObjectFormatter
+from .types.response import ObjectResponse, ModelResponse
+from .types.data_mapper import ModelMapper, FieldMapper, ObjectMapper, MapperDefaults
