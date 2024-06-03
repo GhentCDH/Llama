@@ -11,12 +11,20 @@ A python library for [Nodegoat](https://nodegoat.net). This library allows you t
     - cast field values to associated field type
     - traverse references to classifications, objects and media
 
+## Installation
+
+First install the dependencies with a command similar to the command below. Here the installation is done for the user and not global. It uses `pip` and not `pip3` which may be the same on your system.
+
+```pip install --user -r requirements.txt````
+
+
+
 ## API
 
 ```python
 from llama import NodegoatAPI
 
-nodegoat = NodegoatAPI('https://api.nodegoat.net', 
+nodegoat_api = NodegoatAPI('https://api.nodegoat.net', 
                   'my_very_secret_api_token',
                   project_id=1701)
 
