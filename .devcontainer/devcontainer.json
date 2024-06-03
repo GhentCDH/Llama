@@ -24,6 +24,6 @@
 	// "remoteUser": "root"
 	  // For git authentication with ssh keys
 	  "mounts": [
-		"type=bind,source=${localEnv:HOME}/.ssh,target=/home/rails_runner/.ssh,readonly"
+		"type=bind,source=${localEnv:HOME}/.ssh,target=/home/vscode/.ssh,readonly"
 	  ]
 }
