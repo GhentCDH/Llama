@@ -1,6 +1,6 @@
 # Llama
 
-A python library for [Nodegoat](https://nodegoat.net). This library allows you to requests model and object data using the Nodegoat API. 
+A python library for [Nodegoat](https://nodegoat.net). This library eats models and objects from the Nodegoat API and spits readable json data.
 
 ## Features
 
