@@ -60,7 +60,15 @@ class NodegoatAPI():
         
         # request
         response = self._request(url)
-        return msgspec.json.decode(response.content, type=ModelResponse)
+
+        response_content = response.content
+
+        try:
+            return msgspec.json.decode(response_content, type=ModelResponse)
+        except msgspec.DecodeError as e:
+            # Handle the DecodeError here
+            print(f"DecodeError: {response_content}")
+            raise e
             
                 
     def object_request(self, type_id: int = None, object_id: int|str|list = None, project_id: int = None, scope_id: int = None, filter_id: int = None, component: dict = None) -> ObjectResponse:
