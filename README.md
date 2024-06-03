@@ -184,3 +184,7 @@ output = formatter.format(object)
     "accession_number": "NA",
     ...
 ```
+
+## Credits
+
+Development by [GhentCDH - Ghent University](https://www.ghentcdh.ugent.be/). Funded by the [GhentCDH research projects](https://www.ghentcdh.ugent.be/projects).
