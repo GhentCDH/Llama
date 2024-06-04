@@ -1,6 +1,5 @@
 import requests
 import msgspec
-import json
 from requests.auth import AuthBase
 from .types.response import ModelResponse, ObjectResponse
 from .types.model import ObjectType
@@ -111,7 +110,6 @@ class NodegoatAPI():
 
         # request
         response = self._request(url)
-        # print(json.dumps(str(response.content), indent=4))
         
         return msgspec.json.decode(response.content, type=ObjectResponse)
     
