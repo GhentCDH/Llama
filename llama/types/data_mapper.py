@@ -5,6 +5,9 @@ class MapperDefaults(msgspec.Struct):
     traverse_classification: bool = None
     traverse_media: bool = None
     
+    def to_dict(self):
+        return {f: getattr(self, f) for f in self.__struct_fields__}
+    
 class FieldMapper(msgspec.Struct):
     traverse: bool = None
     system_name: str = None

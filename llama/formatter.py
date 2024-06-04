@@ -2,7 +2,7 @@ import locale
 from .api import NodegoatAPI
 from .types.data import Object, ObjectField, SubObject
 from .types.model import ObjectFieldDescription, ObjectType, SubObjectType
-from .types.data_mapper import FieldMapper, ObjectMapper
+from .types.data_mapper import FieldMapper, MapperDefaults, ObjectMapper
 from slugify import slugify
 
 
@@ -18,8 +18,10 @@ class ObjectFormatter():
         res = {
             "id": object.metadata.id,
         }
-        
-        type_mapper = self._mapper.types.get(object.metadata.type_id, ObjectMapper())
+
+        # get object mapper        
+        type_mapper = self._get_object_mapper(object.metadata.type_id)
+        type_mapper_defaults = type_mapper.defaults
         
         # fields?           
         for field in object.fields.values():
@@ -27,20 +29,19 @@ class ObjectFormatter():
             field_mapper = type_mapper.fields.get(field.description_id, FieldMapper())
             field_system_name = field.system_name = self._field_system_name(field_description, field_mapper)
             
+            # include field in output?
             if len(type_mapper.include_fields) and field_system_name not in type_mapper.include_fields:
                 continue
             elif len(type_mapper.exclude_fields) and field_system_name in type_mapper.exclude_fields:
                 continue
-            
-            # print(field_definition.label, field_name, field, field_traverse_config)
-            
+                        
             # empty value?
             if field.value is None:
                 res[field_system_name] = None
                 continue
                         
             # format value
-            res[field_system_name] = self._format_field(field, field_description, type_mapper)
+            res[field_system_name] = self._format_field(field, field_description, field_mapper, type_mapper_defaults)
 
         # classifications fields can be empty
         # use name 
@@ -54,13 +55,59 @@ class ObjectFormatter():
             sub_object_name = sub_object_model.type.system_name = self._object_system_name(sub_object_model, field_mapper)
             
             res.setdefault(sub_object_name, [])
-            res[sub_object_name].append(self._format_sub_object(sub_object, sub_object_model))
+            res[sub_object_name].append(self._format_sub_object(sub_object, sub_object_model, type_mapper.defaults))
                     
         return res
     
-    def _format_field(self, field: ObjectField, field_description: ObjectFieldDescription, type_mapper: ObjectMapper):
+    def _format_sub_object(self, object: SubObject, object_model: SubObjectType, type_mapper_defaults: MapperDefaults):
 
-        field_mapper = type_mapper.fields.get(field.description_id, FieldMapper())
+        # get object mapper
+        type_mapper = self._get_object_mapper(object.metadata.type_id)
+        
+        # merge sub object mapper defaults with object mapper defaults
+        mapperlist =  [type_mapper_defaults, type_mapper.defaults]
+        type_mapper_defaults = self._merge_object_mapper_defaults(mapperlist)
+
+        return_object = {
+            "id": object.metadata.id,
+        }
+        
+        # date/daterange?
+        if object_model.type.has_date:
+            # todo: format date/daterange data
+            pass
+
+        # location?        
+        if object_model.type.has_location:
+            # todo: format location data
+            pass
+        
+        # fields?           
+        for field in object.fields.values():
+            field_description = object_model.fields[str(field.description_id)]
+            field_mapper = type_mapper.fields.get(field.description_id, FieldMapper())
+            field_system_name = field.system_name = self._field_system_name(field_description, field_mapper)
+            
+            # include field in output?            
+            if len(type_mapper.include_fields) and field_system_name not in type_mapper.include_fields:
+                continue
+            elif len(type_mapper.exclude_fields) and field_system_name in type_mapper.exclude_fields:
+                continue
+                        
+            # empty value?
+            if field.value is None:
+                return_object[field_system_name] = None
+                continue
+            
+            # format value
+            return_object[field_system_name] = self._format_field(field, field_description, field_mapper, type_mapper_defaults)            
+
+        return return_object
+    
+    
+    def _format_field(self, field: ObjectField, field_description: ObjectFieldDescription, field_mapper: FieldMapper, type_mapper_defaults: MapperDefaults):
+
+        # field_mapper = type_mapper.fields.get(field.description_id, FieldMapper())
         field_traverse_config = "traverse_" + field_description.value_type_base
 
         # process value
@@ -70,11 +117,10 @@ class ObjectFormatter():
             case "classification" | "type":
                 refs = self._to_list(field.ref_object_id)
                 if refs:
-                    field_traverse_config = "traverse_" + field_description.value_type_base
+                    # field_traverse_config = "traverse_" + field_description.value_type_base
                     traverse = self._first_true([
                             field_mapper.traverse,
-                            getattr(type_mapper.defaults, field_traverse_config), 
-                            getattr(self._mapper.defaults, field_traverse_config)
+                            getattr(type_mapper_defaults, field_traverse_config), 
                         ],
                         False,
                         lambda x: x is not None
@@ -83,11 +129,10 @@ class ObjectFormatter():
                         ref_objects = self._api.get_object(type_id=field_description.ref_type_id, object_id=refs)
                         field_values = [self.format(ref_object) for ref_object in ref_objects]
             case "media":
-                    field_traverse_config = "traverse_" + field_description.value_type_base
+                    # field_traverse_config = "traverse_" + field_description.value_type_base
                     traverse = self._first_true([
                             field_mapper.traverse,
-                            getattr(type_mapper.defaults, field_traverse_config), 
-                            getattr(self._mapper.defaults, field_traverse_config)
+                            getattr(type_mapper_defaults, field_traverse_config), 
                         ],
                         False,
                         lambda x: x is not None
@@ -100,46 +145,7 @@ class ObjectFormatter():
             
         # multiple values allowed?
         return field_values if (hasattr(field_description, "has_multi") and field_description.has_multi) else field_values[0]
-    
-    def _format_sub_object(self, sub_object: SubObject, sub_object_model: SubObjectType):
-
-        type_mapper = self._mapper.types.get(sub_object.metadata.type_id, ObjectMapper())
-
-        return_object = {
-            "id": sub_object.metadata.id,
-        }
-        
-        # data/daterange?
-        if sub_object_model.type.has_date:
-            pass
-
-        # location?        
-        if sub_object_model.type.has_location:
-            pass
-        
-        # fields?           
-        for field in sub_object.fields.values():
-            field_description = sub_object_model.fields[str(field.description_id)]
-            field_mapper = type_mapper.fields.get(field.description_id, FieldMapper())
-            field_system_name = field.system_name = self._field_system_name(field_description, field_mapper)
-            
-            if len(type_mapper.include_fields) and field_system_name not in type_mapper.include_fields:
-                continue
-            elif len(type_mapper.exclude_fields) and field_system_name in type_mapper.exclude_fields:
-                continue
-            
-            # print(field_definition.label, field_name, field, field_traverse_config)
-            
-            # empty value?
-            if field.value is None:
-                return_object[field_system_name] = None
-                continue
-            
-            # format value
-            return_object[field_system_name] = self._format_field(field, field_description, type_mapper)            
-
-        return return_object
-                                         
+                                             
     def _field_system_name(self, field_description: ObjectFieldDescription, field_mapper: FieldMapper):
         return field_mapper.system_name or \
             slugify(field_description.label, separator="_", regex_pattern=r'[^a-z0-9_]+')
@@ -168,3 +174,14 @@ class ObjectFormatter():
     
     def _first_true(self, iterable, default=False, pred=None):
         return next(filter(pred, iterable), default)
+    
+    def _get_object_mapper(self, object_id: int):
+        return self._mapper.types.get(object_id, ObjectMapper())
+
+    def _merge_object_mapper_defaults(self, objects: list[MapperDefaults]) -> MapperDefaults:
+        merged_object = MapperDefaults()
+        for obj in objects:
+            for key, value in obj.to_dict().items():
+                if value:= getattr(obj, key) is not None:
+                    setattr(merged_object, key, value)
+        return merged_object
