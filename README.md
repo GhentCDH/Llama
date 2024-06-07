@@ -51,7 +51,7 @@ The Nodegoat API returns raw data in a format that reflects the internal databas
 
 Example: the string value "1" can be the string value "1", a boolean True, the integer number 1 or the floating point number $`10^{-10}`$.
 
-The formatter tries to fix these problemes and convert the output to a more readable json object. The formatter can also traverse references to other data (objects, classifications or media). Some options can be configured using an optional Mapper object.
+The formatter can fix these problemes and convert the output to a more readable json object. The formatter can also traverse references to other data (objects, classifications or media). Some options can be configured using an optional Mapper object.
 
 ### Usage
 
@@ -59,7 +59,7 @@ The formatter tries to fix these problemes and convert the output to a more read
 from llama import NodegoatAPI, ObjectFormatter, MapperDefaults, ObjectMapper, FieldMapper, TypeMapper
 
 mapper = ModelMapper(
-    defaults=MapperDefaults(traverse_classification=True, traverse_type=False),
+    defaults=MapperDefaults(traverse_classification=True, traverse_type=False, cast_values=True),
     types={
         1286: ObjectMapper(
             fields={
