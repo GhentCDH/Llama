@@ -15,7 +15,7 @@ A python library for [Nodegoat](https://nodegoat.net). This library eats models 
 
 First install the dependencies with a command similar to the command below. Here the installation is done for the user and not global. It uses `pip` and not `pip3` which may be the same on your system.
 
-```pip install --user -r requirements.txt````
+```pip install --user -r requirements.txt```
 
 
 
