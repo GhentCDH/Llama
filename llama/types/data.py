@@ -8,7 +8,7 @@ def _sub_object_field_definition_rename(name: str) -> Optional[str]:
 class SubObjectField(msgspec.Struct, rename=_sub_object_field_definition_rename):
     description_id: int = msgspec.field(name="object_sub_description_id")
     ref_object_id: list[int]|dict|int|None
-    value: list|int|str
+    value: list|int|str|bool|float
     sources: list|dict # todo: type this!
     style: list|dict # todo: type this!
     system_name: Optional[str] = None    
@@ -68,7 +68,7 @@ def _object_field_definition_rename(name: str) -> Optional[str]:
 class ObjectField(msgspec.Struct, rename=_object_field_definition_rename):
     description_id: int = msgspec.field(name="object_description_id")
     ref_object_id: list[int]|dict|int|None
-    value: list|int|str
+    value: list|int|str|bool|float
     sources: list|dict # todo: type this!
     style: list|dict # todo: type this!
     system_name: Optional[str] = None    
