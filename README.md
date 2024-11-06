@@ -1,4 +1,4 @@
-# Llama
+# Melkschaap
 
 A python library for [Nodegoat](https://nodegoat.net). This library eats models and objects from the Nodegoat API and spits readable json data.
 
@@ -22,7 +22,7 @@ First install the dependencies with a command similar to the command below. Here
 ## API
 
 ```python
-from llama import NodegoatAPI
+from melkschaap import NodegoatAPI
 
 nodegoat_api = NodegoatAPI('https://api.nodegoat.net', 
                   'my_very_secret_api_token',
@@ -56,7 +56,7 @@ The formatter can fix these problemes and convert the output to a more readable 
 ### Usage
 
 ```python
-from llama import NodegoatAPI, ObjectFormatter, MapperDefaults, ObjectMapper, FieldMapper, TypeMapper
+from melkschaap import NodegoatAPI, ObjectFormatter, MapperDefaults, ObjectMapper, FieldMapper, TypeMapper
 
 mapper = ModelMapper(
     defaults=MapperDefaults(traverse_classification=True, traverse_type=False, cast_values=True),
@@ -144,7 +144,7 @@ output = formatter.format(object)
             ...
 ```
 
-**Llama output**
+**melkschaap output**
 
 ```json
 {
