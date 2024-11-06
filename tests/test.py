@@ -9,8 +9,8 @@ sys.path.insert(1, os.path.join(sys.path[0], '..'))
 if __name__ == "__main__":   
     import tests.data.data_structs as data_structs
     import tests.data.model_structs as model_structs
-    import llama.types.model as model
-    from llama.types.response import ModelResponse, ObjectResponse
+    import melkschaap.types.model as model
+    from melkschaap.types.response import ModelResponse, ObjectResponse
     
     # check subobjects model
     msgspec.json.decode(model_structs.sub_object_field_description, type=model.SubObjectFieldDescription)
